@@ -17,11 +17,19 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 pragma solidity >=0.7.0 <0.9.0;
 
 contract TangemTokenWallet {
-    uint16 public otpRootCounter;
+    // @dev Current root OTP.
     bytes16 public otpRoot;
+    // @dev Current root OTP counter.
+    uint16 public otpRootCounter;
+    // @dev Maximum amount of tokens that can be transferred per call.
     uint256 public spendLimit;
-    address card; // mapping to this address in the multi-user scenario
-    address processor; // in this simple implementation: same for all users, cannot be updated once the contract is deployed
+    // @dev Address which can approve transfers.
+    address card;
+    // @dev Address which holds tokens.
+    address wallet;
+    // @dev Address which can process transactions.
+    address processor;
+    // @dev ERC20 token which can be transferred by processor.
     ERC20 token;
 
     // Only callable by card
@@ -55,20 +63,25 @@ contract TangemTokenWallet {
 
     constructor(
         address _card,
+        address _wallet,
         address _processor,
         address _token,
         uint256 _spendLimit
     ) {
         card = _card;
+        wallet = _wallet;
         processor = _processor;
         token = ERC20(_token);
         spendLimit = _spendLimit;
     }
 
     // Sync OTP between the card wallet and the applet (to be called at least once in the beginning)
-    function initOTP(bytes16 otp, uint16 counter) external onlyCard {
-        otpRoot = otp;
-        otpRootCounter = counter;
+    function initOTP(bytes16 _otpRoot, uint16 _otpRootCounter)
+        external
+        onlyCard
+    {
+        otpRoot = _otpRoot;
+        otpRootCounter = _otpRootCounter;
     }
 
     // Collecting funds from Visa payments
@@ -94,7 +107,7 @@ contract TangemTokenWallet {
         if (bOTP != otpRoot) revert InvalidOtp(bOTP);
         otpRootCounter = counter;
         otpRoot = otp;
-        bool success = token.transferFrom(card, processor, tokenAmount);
+        bool success = token.transferFrom(wallet, processor, tokenAmount);
         if (!success) revert TransferFailed();
     }
 
