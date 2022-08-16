@@ -12,3 +12,8 @@ Build contract:
 ```sh
 yarn build
 ```
+
+Run tests:
+```sh
+yarn test
+```
