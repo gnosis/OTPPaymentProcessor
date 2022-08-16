@@ -17,7 +17,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 pragma solidity >=0.7.0 <0.9.0;
 
 contract TangemTokenWallet {
-    uint32 public sequence;
     uint16 public otpRootCounter;
     bytes16 public otpRoot;
     uint256 public spendLimit;
