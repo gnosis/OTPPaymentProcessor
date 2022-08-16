@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 pragma solidity >=0.7.0 <0.9.0;
 
-contract OTPProcessor {
+contract OTPProcessorSingleUser {
     // @dev Current root OTP.
     bytes16 public otpRoot;
     // @dev Current root OTP counter.
@@ -14,13 +14,17 @@ contract OTPProcessor {
     // @dev Maximum amount of tokens that can be transferred per call.
     uint256 public spendLimit;
     // @dev Address which can approve transfers.
-    address card;
+    address public card;
     // @dev Address which holds tokens.
-    address wallet;
+    address public wallet;
     // @dev Address which can process transactions.
-    address processor;
+    address public processor;
     // @dev ERC20 token which can be transferred by processor.
-    ERC20 token;
+    ERC20 public token;
+
+    event SetOTPRoot(bytes16 otpRoot, uint16 otpRootCounter);
+    event SetSpendLimit(uint256 spendLimit);
+    event PaymentProcessed(uint256 value, bytes16 otp, uint16 counter);
 
     // Only callable by card
     error OnlyCard(address card, address sender);
@@ -77,14 +81,6 @@ contract OTPProcessor {
         setOTPRoot(_otpRoot, _otpRootCounter);
     }
 
-    // @dev Sets the OTP Root and counter.
-    // @param _otpRoot bytes16 OTP code to be set as the root.
-    // @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
-    function setOTPRoot(bytes16 _otpRoot, uint16 _otpRootCounter) private {
-        otpRoot = _otpRoot;
-        otpRootCounter = _otpRootCounter;
-    }
-
     // @dev Processes VISA payment
     // @param tokenAmount Amount of tokens to be transferred.
     // @param otp OTP code to authorize transfer.
@@ -115,12 +111,23 @@ contract OTPProcessor {
         setOTPRoot(otp, counter);
         bool success = token.transferFrom(wallet, processor, tokenAmount);
         if (!success) revert TransferFailed();
+        emit PaymentProcessed(tokenAmount, otp, counter);
+    }
+
+    // @dev Sets the OTP Root and counter.
+    // @param _otpRoot bytes16 OTP code to be set as the root.
+    // @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
+    function setOTPRoot(bytes16 _otpRoot, uint16 _otpRootCounter) private {
+        otpRoot = _otpRoot;
+        otpRootCounter = _otpRootCounter;
+        emit SetOTPRoot(otpRoot, otpRootCounter);
     }
 
     // @dev Set the maximum amount of tokens which can be transferred via process() in a single call.
     // @param _spendLimit the maximum amount of tokens to be set.
     // @notice Can only be called by card.
-    function changeSpendLimit(uint256 _spendLimit) external onlyCard {
+    function setSpendLimit(uint256 _spendLimit) external onlyCard {
         spendLimit = _spendLimit;
+        emit SetSpendLimit(spendLimit);
     }
 }
