@@ -2,16 +2,6 @@
 
 /// @title TangemPaymentProcessor -- A contract which allows a given payment processor to process user-authorized ERC20 token transfers.
 
-/*  
-This is the simplest possible implementation for a single user:
-processor is only involved in processing of transactions coming from Visa,
-no protection against double-spending,
-gas is not taken into consideration!
-
-In the multi-user scenario, a separate set of all variables should be stored for each user through MAPPING to the user's ‘card’ wallet address.
-The user shall APPROVE this contract as a SPENDER from the host ERC20 contract.
-*/
-
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 pragma solidity >=0.7.0 <0.9.0;
@@ -75,16 +65,31 @@ contract TangemTokenWallet {
         spendLimit = _spendLimit;
     }
 
-    // Sync OTP between the card wallet and the applet (to be called at least once in the beginning)
+    // @dev Sync OTP between the card and the applet.
+    // @param _otpRoot bytes16 OTP code to be set as the root.
+    // @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
+    // @notice Must be called at least once to initialize the contract.
+    // @notice Can only be called by card.
     function initOTP(bytes16 _otpRoot, uint16 _otpRootCounter)
         external
         onlyCard
     {
+        setOTPRoot(_otpRoot, _otpRootCounter);
+    }
+
+    // @dev Sets the OTP Root and counter.
+    // @param _otpRoot bytes16 OTP code to be set as the root.
+    // @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
+    function setOTPRoot(bytes16 _otpRoot, uint16 _otpRootCounter) private {
         otpRoot = _otpRoot;
         otpRootCounter = _otpRootCounter;
     }
 
-    // Collecting funds from Visa payments
+    // @dev Processes VISA payment
+    // @param tokenAmount Amount of tokens to be transferred.
+    // @param otp OTP code to authorize transfer.
+    // @param counter OTP counter to authorize transfer.
+    // @notice Can only be called by processor.
     function process(
         uint256 tokenAmount,
         bytes16 otp,
@@ -96,7 +101,8 @@ contract TangemTokenWallet {
         if (otpRootCounter < counter)
             revert InvalidCounter(otpRootCounter, counter);
 
-        // Authorization - OTP received from the card in the Visa tx is verified against the next OTP in the smart-contract
+        // Authorization
+        // OTP received from the card in the VISA tx is verified against the next OTP in the smart-contract.
         bytes20 bAddress = bytes20(card);
         bytes16 bOTP = otp;
         uint16 c = counter;
@@ -105,14 +111,15 @@ contract TangemTokenWallet {
             c++;
         }
         if (bOTP != otpRoot) revert InvalidOtp(bOTP);
-        otpRootCounter = counter;
-        otpRoot = otp;
+
+        setOTPRoot(otp, counter);
         bool success = token.transferFrom(wallet, processor, tokenAmount);
         if (!success) revert TransferFailed();
     }
 
-    // User sets the max amount of a single tx that can be approved by the processor in the PROCESS method (above)
-
+    // @dev Set the maximum amount of tokens which can be transferred via process() in a single call.
+    // @param _spendLimit the maximum amount of tokens to be set.
+    // @notice Can only be called by card.
     function changeSpendLimit(uint256 _spendLimit) external onlyCard {
         spendLimit = _spendLimit;
     }
