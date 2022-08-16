@@ -1,4 +1,4 @@
-# Tangem Processor
+# Tangem Payment Processor
 
 The Tangem Processor contract allows for a payment processor to trigger user-approved token transfers on behalf of a user.
 
