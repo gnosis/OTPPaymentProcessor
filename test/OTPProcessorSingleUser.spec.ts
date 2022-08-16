@@ -186,6 +186,7 @@ describe("OTPProcessorSingleUser", function () {
         otpProcessor.connect(processor).process(spendLimit, otp998, 998)
       ).to.be.revertedWith("ERC20: insufficient allowance");
     });
+
     it("Should transfer correct amount of tokens from wallet to processor", async () => {
       const { card, otpProcessor, processor, token } = await loadFixture(setup);
 
@@ -195,10 +196,11 @@ describe("OTPProcessorSingleUser", function () {
 
       expect(await token.approve(otpProcessor.address, spendLimit));
       expect(
-        await otpProcessor.connect(processor).process(spendLimit, otp998, 998)
+        await otpProcessor.connect(processor).process(spendLimit, otp995, 995)
       );
       expect(await token.balanceOf(processor.address)).to.equal(spendLimit);
     });
+
     it("Should emit PaymentProcessed() event", async () => {
       const { card, otpProcessor, processor, token } = await loadFixture(setup);
 

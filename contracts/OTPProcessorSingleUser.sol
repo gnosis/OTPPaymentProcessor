@@ -99,14 +99,11 @@ contract OTPProcessorSingleUser {
 
         // Authorization
         // OTP received from the card in the VISA tx is verified against the next OTP in the smart-contract.
-        bytes20 bAddress = bytes20(card);
-        bytes16 bOTP = otp;
-        uint16 c = counter;
-        while (c < otpRootCounter) {
-            bOTP = bytes16(sha256(bytes.concat(bAddress, bytes2(c), bOTP)));
-            c++;
+        while (counter < otpRootCounter) {
+            otp = bytes16(sha256(abi.encodePacked(card, counter, otp)));
+            counter++;
         }
-        if (bOTP != otpRoot) revert InvalidOtp(bOTP);
+        if (otp != otpRoot) revert InvalidOtp(otp);
 
         setOTPRoot(otp, counter);
         bool success = token.transferFrom(wallet, processor, tokenAmount);
