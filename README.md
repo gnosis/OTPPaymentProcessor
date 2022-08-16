@@ -1,13 +1,14 @@
-# Sample Hardhat Project
+# Tangem Processor
 
-This project demonstrates a basic Hardhat use case. It comes with a sample contract, a test for that contract, and a script that deploys that contract.
+The Tangem Processor contract allows for a payment processor to trigger user-approved token transfers on behalf of a user.
 
-Try running some of the following tasks:
+## Development
+Install dependencies:
+```sh
+yarn
+```
 
-```shell
-npx hardhat help
-npx hardhat test
-GAS_REPORT=true npx hardhat test
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+Build contract:
+```sh
+yarn build
 ```
