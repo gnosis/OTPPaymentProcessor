@@ -191,7 +191,7 @@ contract OTPProcessorMultiUser is Ownable {
     // @param Address _token Address to set token to.
     // @notice Can only be called by owner.
     function setToken(address _token) external onlyOwner {
-        token = _token;
-        emit SetToken(token);
+        token = ERC20(_token);
+        emit SetToken(address(token));
     }
 }
