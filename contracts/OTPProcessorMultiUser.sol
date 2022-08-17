@@ -100,7 +100,7 @@ contract OTPProcessorMultiUser is Ownable {
         uint16 counter
     ) external onlyProcessor {
         address wallet = cards[card].wallet;
-        if (tokenAmount > spendLimits[wallet][card] && card != wallet)
+        if (tokenAmount > spendLimits[wallet][card])
             revert ExceedsSpendLimit(
                 card,
                 spendLimits[wallet][card],
