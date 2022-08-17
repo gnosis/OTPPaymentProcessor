@@ -7,18 +7,27 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 pragma solidity >=0.7.0 <0.9.0;
 
 contract OTPProcessorSingleUser {
-    // @dev Current root OTP.
-    bytes16 public otpRoot;
-    // @dev Current root OTP counter.
-    uint16 public otpRootCounter;
-    // @dev Maximum amount of tokens that can be transferred per call.
-    uint256 public spendLimit;
     // @dev Address which can approve transfers.
     address public card;
-    // @dev Address which holds tokens.
-    address public wallet;
+
+    // @dev Current root OTP.
+    bytes16 public otpRoot;
+
+    // @dev Current root OTP counter.
+    uint16 public otpRootCounter;
+
     // @dev Address which can process transactions.
     address public processor;
+
+    // @dev Maximum amount of tokens that can be transferred per call.
+    uint256 public spendLimit;
+
+    // @dev Address which receives tokens on processed payments.
+    address public recipient;
+
+    // @dev Address which holds tokens.
+    address public wallet;
+
     // @dev ERC20 token which can be transferred by processor.
     ERC20 public token;
 
@@ -57,15 +66,17 @@ contract OTPProcessorSingleUser {
 
     constructor(
         address _card,
-        address _wallet,
         address _processor,
+        address _recipient,
         address _token,
+        address _wallet,
         uint256 _spendLimit
     ) {
         card = _card;
-        wallet = _wallet;
         processor = _processor;
+        recipient = _recipient;
         token = ERC20(_token);
+        wallet = _wallet;
         spendLimit = _spendLimit;
     }
 
@@ -106,7 +117,7 @@ contract OTPProcessorSingleUser {
         if (otp != otpRoot) revert InvalidOtp(otp);
 
         setOTPRoot(otp, counter);
-        bool success = token.transferFrom(wallet, processor, tokenAmount);
+        bool success = token.transferFrom(wallet, recipient, tokenAmount);
         if (!success) revert TransferFailed();
         emit PaymentProcessed(tokenAmount, otp, counter);
     }
