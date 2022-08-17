@@ -21,7 +21,7 @@ contract OTPProcessorMultiUser is Ownable {
     mapping(address => Card) public cards;
 
     // @dev Mapping of wallets to cards to spending limits.
-    mapping(address => mapping(address => uint256)) public spendingLimits;
+    mapping(address => mapping(address => uint256)) public spendLimits;
 
     // @dev Address which can process transactions.
     address public processor;
@@ -106,12 +106,12 @@ contract OTPProcessorMultiUser is Ownable {
         uint16 counter
     ) external onlyProcessor {
         if (
-            tokenAmount > spendingLimits[cards[card].wallet][card] &&
+            tokenAmount > spendLimits[cards[card].wallet][card] &&
             card != cards[card].wallet
         )
             revert ExceedsSpendLimit(
                 card,
-                spendingLimits[cards[card].wallet][card],
+                spendLimits[cards[card].wallet][card],
                 tokenAmount
             );
 
@@ -160,8 +160,8 @@ contract OTPProcessorMultiUser is Ownable {
     // @param card Address of the card to set spending limit for.
     // @param spendLimit The maximum amount of tokens to be set.
     function setSpendLimit(address card, uint256 spendLimit) external {
-        spendingLimits[msg.sender][card] = spendLimit;
-        emit SetSpendLimit(msg.sender, card, spendingLimits[msg.sender][card]);
+        spendLimits[msg.sender][card] = spendLimit;
+        emit SetSpendLimit(msg.sender, card, spendLimits[msg.sender][card]);
     }
 
     // @dev Sets the wallet that a card will spend from.
