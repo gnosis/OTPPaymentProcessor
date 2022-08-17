@@ -50,44 +50,44 @@ describe("OTPProcessorSingleUser", function () {
     it("Should set the right card", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.card()).to.equal(card.address);
+      await expect(await otpProcessor.card()).to.equal(card.address);
     });
 
     it("Should set the right wallet", async () => {
       const { otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(await otpProcessor.wallet()).to.equal(wallet.address);
+      await expect(await otpProcessor.wallet()).to.equal(wallet.address);
     });
 
     it("Should set the right processor", async () => {
       const { otpProcessor, processor } = await loadFixture(setup);
 
-      expect(await otpProcessor.processor()).to.equal(processor.address);
+      await expect(await otpProcessor.processor()).to.equal(processor.address);
     });
 
     it("Should set the right token", async () => {
       const { otpProcessor, token } = await loadFixture(setup);
 
-      expect(await otpProcessor.token()).to.equal(token.address);
+      await expect(await otpProcessor.token()).to.equal(token.address);
     });
 
     it("Should set the right spend limit", async () => {
       const { otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.spendLimit()).to.equal(spendLimit);
+      await await expect(await otpProcessor.spendLimit()).to.equal(spendLimit);
     });
 
     it("Should set the right recipient", async () => {
       const { otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.recipient()).to.equal(recipient);
+      await await expect(await otpProcessor.recipient()).to.equal(recipient);
     });
 
     it("Should not have set otpRoot and otpRootCount", async () => {
       const { otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.otpRoot()).to.equal(bytes16zero);
-      expect(await otpProcessor.otpRootCounter()).to.equal(0);
+      await await expect(await otpProcessor.otpRoot()).to.equal(bytes16zero);
+      await await expect(await otpProcessor.otpRootCounter()).to.equal(0);
     });
   });
 
@@ -95,24 +95,24 @@ describe("OTPProcessorSingleUser", function () {
     it("Should revert if caller is not card", async () => {
       const { card, otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(otpProcessor.initOTP(otp995, 995))
+      await await expect(otpProcessor.initOTP(otp995, 995))
         .to.be.revertedWithCustomError(otpProcessor, "OnlyCard")
-        .withArgs([card.address, wallet.address]);
+        .withArgs(card.address, wallet.address);
     });
 
     it("Should set otpRoot and otpRootCounter", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp995, 995));
-      expect(await otpProcessor.otpRoot()).to.equal(otp995);
-      expect(await otpProcessor.otpRootCounter()).to.equal(995);
+      await await expect(await otpProcessor.connect(card).initOTP(otp995, 995));
+      await await expect(await otpProcessor.otpRoot()).to.equal(otp995);
+      await await expect(await otpProcessor.otpRootCounter()).to.equal(995);
     });
 
     it("Should emit SetOTPRoot() event", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
-      expect(await otpProcessor.connect(card).initOTP(otp995, 995))
+      await await expect(await otpProcessor.connect(card).initOTP(otp995, 995))
         .to.emit(otpProcessor, "SetOTPRoot")
-        .withArgs([otp995, 995]);
+        .withArgs(otp995, 995);
     });
   });
 
@@ -120,24 +120,24 @@ describe("OTPProcessorSingleUser", function () {
     it("Should revert if caller is not card", async () => {
       const { card, otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(otpProcessor.setSpendLimit(spendLimit))
+      await expect(otpProcessor.setSpendLimit(spendLimit))
         .to.be.revertedWithCustomError(otpProcessor, "OnlyCard")
-        .withArgs([card.address, wallet.address]);
+        .withArgs(card.address, wallet.address);
     });
 
     it("Should set otpRoot and otpRootCounter", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).setSpendLimit(spendLimit));
-      expect(await otpProcessor.spendLimit()).to.equal(spendLimit);
+      await expect(await otpProcessor.connect(card).setSpendLimit(spendLimit));
+      await expect(await otpProcessor.spendLimit()).to.equal(spendLimit);
     });
 
     it("Should emit SetSpendLimit() event", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).setSpendLimit(spendLimit))
+      await expect(await otpProcessor.connect(card).setSpendLimit(spendLimit))
         .to.emit(otpProcessor, "SetSpendLimit")
-        .withArgs([spendLimit]);
+        .withArgs(spendLimit);
     });
   });
 
@@ -147,7 +147,7 @@ describe("OTPProcessorSingleUser", function () {
         setup
       );
 
-      expect(otpProcessor.process(spendLimit, otp998, 998))
+      await expect(otpProcessor.process(spendLimit, otp998, 998))
         .to.be.revertedWithCustomError(otpProcessor, "OnlyProcessor")
         .withArgs(processor.address, wallet.address);
     });
@@ -156,7 +156,7 @@ describe("OTPProcessorSingleUser", function () {
       const { otpProcessor, processor } = await loadFixture(setup);
       const spend = spendLimit.add(BigNumber.from(1));
 
-      expect(otpProcessor.connect(processor).process(spend, otp998, 998))
+      await expect(otpProcessor.connect(processor).process(spend, otp998, 998))
         .to.be.revertedWithCustomError(otpProcessor, "ExceedsSpendLimit")
         .withArgs(spendLimit, spend);
     });
@@ -166,9 +166,11 @@ describe("OTPProcessorSingleUser", function () {
         setup
       );
 
-      expect(otpProcessor.connect(processor).process(spendLimit, otp998, 994))
+      await expect(
+        otpProcessor.connect(processor).process(spendLimit, otp998, 994)
+      )
         .to.be.revertedWithCustomError(otpProcessor, "InvalidCounter")
-        .withArgs(998, 994);
+        .withArgs(0, 994);
     });
 
     it("Should revert if OTP is invalid", async () => {
@@ -176,8 +178,8 @@ describe("OTPProcessorSingleUser", function () {
         setup
       );
       const otpInvalid = "0xbad00000000000000000000000000dad";
-
-      expect(
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(
         otpProcessor.connect(processor).process(spendLimit, otpInvalid, 998)
       )
         .to.be.revertedWithCustomError(otpProcessor, "InvalidOtp")
@@ -187,41 +189,57 @@ describe("OTPProcessorSingleUser", function () {
     it("Should revert if token.transferFrom() fails", async () => {
       const { card, otpProcessor, processor } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp999, 999));
-      expect(await otpProcessor.otpRoot()).to.equal(otp999);
-      expect(await otpProcessor.otpRootCounter()).to.equal(999);
-      expect(
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(await otpProcessor.otpRoot()).to.equal(otp999);
+      await expect(await otpProcessor.otpRootCounter()).to.equal(999);
+      await expect(
         otpProcessor.connect(processor).process(spendLimit, otp998, 998)
       ).to.be.revertedWith("ERC20: insufficient allowance");
+    });
+
+    it("Should revert if previously used OTP is provided", async () => {
+      const { card, otpProcessor, processor, token } = await loadFixture(setup);
+
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(await otpProcessor.otpRoot()).to.equal(otp999);
+      await expect(await otpProcessor.otpRootCounter()).to.equal(999);
+
+      await expect(await token.approve(otpProcessor.address, spendLimit));
+      await expect(
+        await otpProcessor.connect(processor).process(spendLimit, otp995, 995)
+      );
+      await expect(
+        otpProcessor.connect(processor).process(spendLimit, otp995, 995)
+      ).to.be.revertedWithCustomError(otpProcessor, "InvalidCounter");
     });
 
     it("Should transfer correct amount of tokens from wallet to processor", async () => {
       const { card, otpProcessor, processor, token } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp999, 999));
-      expect(await otpProcessor.otpRoot()).to.equal(otp999);
-      expect(await otpProcessor.otpRootCounter()).to.equal(999);
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(await otpProcessor.otpRoot()).to.equal(otp999);
+      await expect(await otpProcessor.otpRootCounter()).to.equal(999);
 
-      expect(await token.approve(otpProcessor.address, spendLimit));
-      expect(
+      await expect(await token.approve(otpProcessor.address, spendLimit));
+      await expect(
         await otpProcessor.connect(processor).process(spendLimit, otp995, 995)
       );
-      expect(await token.balanceOf(recipient)).to.equal(spendLimit);
+      await expect(await token.balanceOf(recipient)).to.equal(spendLimit);
     });
 
     it("Should emit PaymentProcessed() event", async () => {
       const { card, otpProcessor, processor, token } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp999, 999));
-      expect(await otpProcessor.otpRoot()).to.equal(otp999);
-      expect(await otpProcessor.otpRootCounter()).to.equal(999);
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(await otpProcessor.otpRoot()).to.equal(otp999);
+      await expect(await otpProcessor.otpRootCounter()).to.equal(999);
 
-      expect(await token.approve(otpProcessor.address, spendLimit));
-      expect(
+      await expect(await token.approve(otpProcessor.address, spendLimit));
+      await expect(
         await otpProcessor.connect(processor).process(spendLimit, otp998, 998)
       )
         .to.emit(otpProcessor, "PaymentProcessed")
-        .withArgs([spendLimit, otp998, 998]);
+        .withArgs(spendLimit, otp998, 998);
     });
   });
 });

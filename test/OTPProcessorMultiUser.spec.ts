@@ -47,25 +47,25 @@ describe("OTPProcessorMultiUser", function () {
     it("Should set the right processor", async () => {
       const { otpProcessor, processor } = await loadFixture(setup);
 
-      expect(await otpProcessor.processor()).to.equal(processor.address);
+      await expect(await otpProcessor.processor()).to.equal(processor.address);
     });
 
     it("Should set the right token", async () => {
       const { otpProcessor, token } = await loadFixture(setup);
 
-      expect(await otpProcessor.token()).to.equal(token.address);
+      await expect(await otpProcessor.token()).to.equal(token.address);
     });
 
     it("Should set the right recipient", async () => {
       const { otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.recipient()).to.equal(recipient);
+      await expect(await otpProcessor.recipient()).to.equal(recipient);
     });
 
     it("Should set the right owner", async () => {
       const { otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(await otpProcessor.owner()).to.equal(wallet.address);
+      await expect(await otpProcessor.owner()).to.equal(wallet.address);
     });
   });
 
@@ -73,18 +73,22 @@ describe("OTPProcessorMultiUser", function () {
     it("Should set otpRoot and otpRootCounter", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp995, 995));
-      expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(otp995);
-      expect((await otpProcessor.cards(card.address)).otpRootCounter).to.equal(
-        995
+      await expect(await otpProcessor.connect(card).initOTP(otp995, 995));
+      await expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(
+        otp995
       );
+      await expect(
+        (
+          await otpProcessor.cards(card.address)
+        ).otpRootCounter
+      ).to.equal(995);
     });
 
     it("Should emit SetOTPRoot() event", async () => {
       const { card, otpProcessor } = await loadFixture(setup);
-      expect(await otpProcessor.connect(card).initOTP(otp995, 995))
+      await expect(await otpProcessor.connect(card).initOTP(otp995, 995))
         .to.emit(otpProcessor, "SetOTPRoot")
-        .withArgs([otp995, 995]);
+        .withArgs(card.address, otp995, 995);
     });
   });
 
@@ -92,8 +96,8 @@ describe("OTPProcessorMultiUser", function () {
     it("Should set otpRoot and otpRootCounter", async () => {
       const { card, otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
-      expect(
+      await expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(
         await otpProcessor.spendLimits(wallet.address, card.address)
       ).to.equal(spendLimit);
     });
@@ -101,7 +105,7 @@ describe("OTPProcessorMultiUser", function () {
     it("Should emit SetSpendLimit() event", async () => {
       const { card, otpProcessor, wallet } = await loadFixture(setup);
 
-      expect(await otpProcessor.setSpendLimit(card.address, spendLimit))
+      await expect(await otpProcessor.setSpendLimit(card.address, spendLimit))
         .to.emit(otpProcessor, "SetSpendLimit")
         .withArgs(wallet.address, card.address, spendLimit);
     });
@@ -113,7 +117,7 @@ describe("OTPProcessorMultiUser", function () {
         setup
       );
 
-      expect(otpProcessor.process(card.address, spendLimit, otp998, 998))
+      await expect(otpProcessor.process(card.address, spendLimit, otp998, 998))
         .to.be.revertedWithCustomError(otpProcessor, "OnlyProcessor")
         .withArgs(processor.address, wallet.address);
     });
@@ -124,25 +128,30 @@ describe("OTPProcessorMultiUser", function () {
       );
       const spend = spendLimit.add(BigNumber.from(1));
 
-      expect(
+      await expect(
         otpProcessor
           .connect(processor)
           .process(card.address, spend, otp998, 998)
       )
         .to.be.revertedWithCustomError(otpProcessor, "ExceedsSpendLimit")
-        .withArgs(wallet.address, card.address, spendLimit, spend);
+        .withArgs(card.address, 0, spend);
     });
 
     it("Should revert if otpRootCounter is less than counter", async () => {
-      const { card, otpProcessor, processor } = await loadFixture(setup);
+      const { card, otpProcessor, processor, wallet } = await loadFixture(
+        setup
+      );
 
-      expect(
+      await expect(otpProcessor.connect(card).initOTP(otp999, 997));
+      await expect(otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(otpProcessor.connect(card).setWallet(wallet.address));
+      await expect(
         otpProcessor
           .connect(processor)
-          .process(card.address, spendLimit, otp998, 994)
+          .process(card.address, spendLimit, otp998, 998)
       )
         .to.be.revertedWithCustomError(otpProcessor, "InvalidCounter")
-        .withArgs(card.address, 998, 994);
+        .withArgs(card.address, 997, 998);
     });
 
     it("Should revert if OTP is invalid", async () => {
@@ -151,7 +160,10 @@ describe("OTPProcessorMultiUser", function () {
       );
       const otpInvalid = "0xbad00000000000000000000000000dad";
 
-      expect(
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(await otpProcessor.connect(card).setWallet(wallet.address));
+      await expect(
         otpProcessor
           .connect(processor)
           .process(card.address, spendLimit, otpInvalid, 998)
@@ -161,18 +173,62 @@ describe("OTPProcessorMultiUser", function () {
     });
 
     it("Should revert if token.transferFrom() fails", async () => {
-      const { card, otpProcessor, processor } = await loadFixture(setup);
-
-      expect(await otpProcessor.connect(card).initOTP(otp999, 999));
-      expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(otp999);
-      expect((await otpProcessor.cards(card.address)).otpRootCounter).to.equal(
-        999
+      const { card, otpProcessor, processor, wallet } = await loadFixture(
+        setup
       );
-      expect(
+
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(
+        otp999
+      );
+      await expect(
+        (
+          await otpProcessor.cards(card.address)
+        ).otpRootCounter
+      ).to.equal(999);
+      await expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(await otpProcessor.connect(card).setWallet(wallet.address));
+      await expect(
         otpProcessor
           .connect(processor)
           .process(card.address, spendLimit, otp998, 998)
       ).to.be.revertedWith("ERC20: insufficient allowance");
+    });
+
+    it("Should revert if previously used OTP is provided", async () => {
+      const { card, otpProcessor, processor, token, wallet } =
+        await loadFixture(setup);
+
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(
+        otp999
+      );
+      await expect(
+        (
+          await otpProcessor.cards(card.address)
+        ).otpRootCounter
+      ).to.equal(999);
+
+      await expect(await otpProcessor.connect(card).setWallet(wallet.address));
+      await expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(
+        await token.approve(
+          otpProcessor.address,
+          spendLimit.mul(BigNumber.from(2))
+        )
+      );
+
+      await expect(
+        await otpProcessor
+          .connect(processor)
+          .process(card.address, spendLimit, otp998, 998)
+      );
+
+      await expect(
+        otpProcessor
+          .connect(processor)
+          .process(card.address, spendLimit, otp998, 998)
+      ).to.be.revertedWithCustomError(otpProcessor, "InvalidCounter");
     });
 
     it("Should transfer correct amount of tokens from wallet to processor", async () => {
@@ -200,22 +256,26 @@ describe("OTPProcessorMultiUser", function () {
       const { card, otpProcessor, processor, token, wallet } =
         await loadFixture(setup);
 
-      expect(await otpProcessor.connect(card).initOTP(otp999, 999));
-      expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(otp999);
-      expect((await otpProcessor.cards(card.address)).otpRootCounter).to.equal(
-        999
+      await expect(await otpProcessor.connect(card).initOTP(otp999, 999));
+      await expect((await otpProcessor.cards(card.address)).otpRoot).to.equal(
+        otp999
       );
+      await expect(
+        (
+          await otpProcessor.cards(card.address)
+        ).otpRootCounter
+      ).to.equal(999);
 
-      expect(await otpProcessor.connect(card).setWallet(wallet.address));
-      expect(await otpProcessor.setSpendLimit(card.address, spendLimit));
-      expect(await token.approve(otpProcessor.address, spendLimit));
-      expect(
-        await otpProcessor
+      await expect(otpProcessor.connect(card).setWallet(wallet.address));
+      await expect(otpProcessor.setSpendLimit(card.address, spendLimit));
+      await expect(token.approve(otpProcessor.address, spendLimit));
+      await expect(
+        otpProcessor
           .connect(processor)
           .process(card.address, spendLimit, otp998, 998)
       )
         .to.emit(otpProcessor, "PaymentProcessed")
-        .withArgs(wallet.address, card.address, spendLimit, otp998, 998);
+        .withArgs(card.address, wallet.address, spendLimit, otp998, 998);
     });
   });
 });

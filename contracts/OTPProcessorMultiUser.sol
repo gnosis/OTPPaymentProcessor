@@ -99,41 +99,32 @@ contract OTPProcessorMultiUser is Ownable {
         bytes16 otp,
         uint16 counter
     ) external onlyProcessor {
-        if (
-            tokenAmount > spendLimits[cards[card].wallet][card] &&
-            card != cards[card].wallet
-        )
+        address wallet = cards[card].wallet;
+        if (tokenAmount > spendLimits[wallet][card] && card != wallet)
             revert ExceedsSpendLimit(
                 card,
-                spendLimits[cards[card].wallet][card],
+                spendLimits[wallet][card],
                 tokenAmount
             );
 
-        if (cards[card].otpRootCounter < counter)
-            revert InvalidCounter(card, cards[card].otpRootCounter, counter);
+        uint16 otpRootCounter = cards[card].otpRootCounter;
+        if (otpRootCounter <= counter)
+            revert InvalidCounter(card, otpRootCounter, counter);
 
+        bytes16 _otp = otp;
+        uint16 _counter = counter;
         // Authorization
         // OTP received from the card in the VISA tx is verified against the next OTP in the smart-contract.
-        while (counter < cards[card].otpRootCounter) {
-            otp = bytes16(sha256(abi.encodePacked(card, counter, otp)));
-            counter++;
+        while (_counter < otpRootCounter) {
+            _otp = bytes16(sha256(abi.encodePacked(card, _counter, _otp)));
+            _counter++;
         }
-        if (otp != cards[card].otpRoot) revert InvalidOtp(card, otp);
+        if (_otp != cards[card].otpRoot) revert InvalidOtp(card, otp);
 
         setOTPRoot(card, otp, counter);
-        bool success = token.transferFrom(
-            cards[card].wallet,
-            recipient,
-            tokenAmount
-        );
+        bool success = token.transferFrom(wallet, recipient, tokenAmount);
         if (!success) revert TransferFailed();
-        emit PaymentProcessed(
-            card,
-            cards[card].wallet,
-            tokenAmount,
-            otp,
-            counter
-        );
+        emit PaymentProcessed(card, wallet, tokenAmount, otp, counter);
     }
 
     // @dev Sets the OTP Root and counter.

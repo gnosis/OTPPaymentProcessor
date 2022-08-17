@@ -105,16 +105,18 @@ contract OTPProcessorSingleUser {
         if (tokenAmount > spendLimit)
             revert ExceedsSpendLimit(spendLimit, tokenAmount);
 
-        if (otpRootCounter < counter)
+        if (otpRootCounter <= counter)
             revert InvalidCounter(otpRootCounter, counter);
 
+        bytes16 _otp = otp;
+        uint16 _counter = counter;
         // Authorization
         // OTP received from the card in the VISA tx is verified against the next OTP in the smart-contract.
-        while (counter < otpRootCounter) {
-            otp = bytes16(sha256(abi.encodePacked(card, counter, otp)));
-            counter++;
+        while (_counter < otpRootCounter) {
+            _otp = bytes16(sha256(abi.encodePacked(card, _counter, _otp)));
+            _counter++;
         }
-        if (otp != otpRoot) revert InvalidOtp(otp);
+        if (_otp != otpRoot) revert InvalidOtp(otp);
 
         setOTPRoot(otp, counter);
         bool success = token.transferFrom(wallet, recipient, tokenAmount);
