@@ -2,7 +2,8 @@
   "name": "hardhat-project",
   "scripts": {
     "build": "hardhat compile",
-    "test": "hardhat test"
+    "test": "hardhat test",
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@ethersproject/abi": "^5.6.4",
