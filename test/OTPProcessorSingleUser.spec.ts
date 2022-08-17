@@ -11,6 +11,7 @@ const otp998 = "0xee79e77077bf4f328fed0191c25088f7";
 const otp995 = "0x287f3d79476b7571b4e269e1f2bc6d3c";
 const spendLimit = ethers.utils.parseEther("100");
 const bytes16zero = "0x00000000000000000000000000000000";
+const recipient = "0x0000000000000000000000000000000000000001";
 
 describe("OTPProcessorSingleUser", function () {
   async function setup() {
@@ -35,9 +36,10 @@ describe("OTPProcessorSingleUser", function () {
     );
     const otpProcessor = await OTPProcessor.deploy(
       card.address,
-      wallet.address,
       processor.address,
+      recipient,
       token.address,
+      wallet.address,
       spendLimit
     );
 
@@ -73,6 +75,12 @@ describe("OTPProcessorSingleUser", function () {
       const { otpProcessor } = await loadFixture(setup);
 
       expect(await otpProcessor.spendLimit()).to.equal(spendLimit);
+    });
+
+    it("Should set the right recipient", async () => {
+      const { otpProcessor } = await loadFixture(setup);
+
+      expect(await otpProcessor.recipient()).to.equal(recipient);
     });
 
     it("Should not have set otpRoot and otpRootCount", async () => {
@@ -198,7 +206,7 @@ describe("OTPProcessorSingleUser", function () {
       expect(
         await otpProcessor.connect(processor).process(spendLimit, otp995, 995)
       );
-      expect(await token.balanceOf(processor.address)).to.equal(spendLimit);
+      expect(await token.balanceOf(recipient)).to.equal(spendLimit);
     });
 
     it("Should emit PaymentProcessed() event", async () => {
