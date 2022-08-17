@@ -46,14 +46,8 @@ contract OTPProcessorMultiUser is Ownable {
     event SetToken(address token);
     event SetWallet(address card, address wallet);
 
-    // Only callable by card
-    error OnlyCard(address card, address sender);
-
     // Only callable by processor
     error OnlyProcessor(address processor, address sender);
-
-    // Only callable by wallet
-    error OnlyWallet(address wallet, address sender);
 
     // Amount exceeds spend limit
     error ExceedsSpendLimit(address card, uint256 limit, uint256 amount);
