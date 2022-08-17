@@ -8,7 +8,7 @@ pragma solidity >=0.7.0 <0.9.0;
 
 contract OTPProcessorSingleUser {
     // @dev Address which can approve transfers.
-    address public card;
+    address public immutable card;
 
     // @dev Current root OTP.
     bytes16 public otpRoot;
@@ -17,19 +17,19 @@ contract OTPProcessorSingleUser {
     uint16 public otpRootCounter;
 
     // @dev Address which can process transactions.
-    address public processor;
+    address public immutable processor;
 
     // @dev Maximum amount of tokens that can be transferred per call.
     uint256 public spendLimit;
 
     // @dev Address which receives tokens on processed payments.
-    address public recipient;
+    address public immutable recipient;
 
     // @dev Address which holds tokens.
-    address public wallet;
+    address public immutable wallet;
 
     // @dev ERC20 token which can be transferred by processor.
-    ERC20 public token;
+    ERC20 public immutable token;
 
     event SetOTPRoot(bytes16 otpRoot, uint16 otpRootCounter);
     event SetSpendLimit(uint256 spendLimit);
