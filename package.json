@@ -3,6 +3,7 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.ts",
     "coverage": "hardhat coverage",
     "hardhat": "hardhat"
   },

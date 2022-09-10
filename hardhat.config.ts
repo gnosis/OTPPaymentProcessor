@@ -22,7 +22,7 @@ const config: HardhatUserConfig = {
       url: process.env.JSONRPC_HTTP_URL || "http://127.0.0.1:8545",
       accounts,
     },
-    optimismgc: {
+    opongc: {
       url: "https://optimism.gnosischain.com" || "http://127.0.0.1:8545",
       accounts,
     },
