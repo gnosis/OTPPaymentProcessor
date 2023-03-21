@@ -20,17 +20,15 @@ contract OTPProcessorMultiUser is Ownable {
     // @dev Mapping of card addresses to card variables.
     mapping(address => Card) public cards;
 
-    // @dev Mapping of wallets to cards to spending limits.
-    mapping(address => mapping(address => uint256)) public spendLimits;
+    // @dev Mapping of wallets to cards to tokens to spending limits.
+    mapping(address => mapping(address => mapping(address => uint256)))
+        public spendLimits;
 
     // @dev Address which can process transactions.
     address public processor;
 
     // @dev Address which receives tokens on processed payments.
     address public recipient;
-
-    // @dev ERC20 token which can be transferred by processor.
-    ERC20 public token;
 
     event PaymentProcessed(
         address card,
@@ -42,8 +40,13 @@ contract OTPProcessorMultiUser is Ownable {
     event SetOTPRoot(address card, bytes16 otpRoot, uint16 otpRootCounter);
     event SetProcessor(address processor);
     event SetRecipient(address recipient);
-    event SetSpendLimit(address wallet, address card, uint256 spendLimit);
-    event SetToken(address token);
+    event SetSpendLimit(
+        address wallet,
+        address card,
+        address token,
+        uint256 spendLimit
+    );
+    // event SetToken(address token);
     event SetWallet(address card, address wallet);
 
     // Only callable by processor
@@ -67,15 +70,9 @@ contract OTPProcessorMultiUser is Ownable {
         _;
     }
 
-    constructor(
-        address _owner,
-        address _processor,
-        address _recipient,
-        address _token
-    ) {
+    constructor(address _owner, address _processor, address _recipient) {
         processor = _processor;
         recipient = _recipient;
-        token = ERC20(_token);
         transferOwnership(_owner);
     }
 
@@ -95,15 +92,16 @@ contract OTPProcessorMultiUser is Ownable {
     // @notice Can only be called by processor.
     function process(
         address card,
+        address token,
         uint256 tokenAmount,
         bytes16 otp,
         uint16 counter
     ) external onlyProcessor {
         address wallet = cards[card].wallet;
-        if (tokenAmount > spendLimits[wallet][card])
+        if (tokenAmount > spendLimits[wallet][card][token])
             revert ExceedsSpendLimit(
                 card,
-                spendLimits[wallet][card],
+                spendLimits[wallet][card][token],
                 tokenAmount
             );
 
@@ -122,7 +120,11 @@ contract OTPProcessorMultiUser is Ownable {
         if (_otp != cards[card].otpRoot) revert InvalidOtp(card, otp);
 
         setOTPRoot(card, otp, counter);
-        bool success = token.transferFrom(wallet, recipient, tokenAmount);
+        bool success = IERC20(token).transferFrom(
+            wallet,
+            recipient,
+            tokenAmount
+        );
         if (!success) revert TransferFailed();
         emit PaymentProcessed(card, wallet, tokenAmount, otp, counter);
     }
@@ -144,9 +146,13 @@ contract OTPProcessorMultiUser is Ownable {
     // @dev Sets the maximum amount of tokens which can be transferred via process() in a single call.
     // @param card Address of the card to set spending limit for.
     // @param spendLimit The maximum amount of tokens to be set.
-    function setSpendLimit(address card, uint256 spendLimit) external {
-        spendLimits[msg.sender][card] = spendLimit;
-        emit SetSpendLimit(msg.sender, card, spendLimits[msg.sender][card]);
+    function setSpendLimit(
+        address card,
+        address token,
+        uint256 spendLimit
+    ) external {
+        spendLimits[msg.sender][card][token] = spendLimit;
+        emit SetSpendLimit(msg.sender, card, token, spendLimit);
     }
 
     // @dev Sets the wallet that a card will spend from.
@@ -170,13 +176,5 @@ contract OTPProcessorMultiUser is Ownable {
     function setRecipient(address _recipient) external onlyOwner {
         recipient = _recipient;
         emit SetRecipient(recipient);
-    }
-
-    // @dev Sets the token that should be transferred when transactions are processed.
-    // @param Address _token Address to set token to.
-    // @notice Can only be called by owner.
-    function setToken(address _token) external onlyOwner {
-        token = ERC20(_token);
-        emit SetToken(address(token));
     }
 }
