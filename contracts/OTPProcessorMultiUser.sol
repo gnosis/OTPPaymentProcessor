@@ -1,6 +1,6 @@
 /// SPDX-License-Identifier: LGPL-3.0-only
 
-//// @title TangemPaymentProcessor -- A contract which allows a given payment processor to process user-authorized ERC20 token transfers.
+/// @title TangemPaymentProcessor -- A contract which allows a given payment processor to process user-authorized ERC20 token transfers.
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -119,10 +119,10 @@ contract OTPProcessorMultiUser is Ownable {
         emit SetWallet(msg.sender, cards[msg.sender].wallet);
     }
 
-    //// @dev Sets the maximum amount of tokens which can be transferred via process() in a single call.
-    //// @param card Address of the card to set spending limit for.
-    //// @param token Address of the token to set a spending limit for.
-    //// @param spendLimit The maximum amount of tokens to be set.
+    /// @dev Sets the maximum amount of tokens which can be transferred via process() in a single call.
+    /// @param card Address of the card to set spending limit for.
+    /// @param token Address of the token to set a spending limit for.
+    /// @param spendLimit The maximum amount of tokens to be set.
     function setSpendLimit(
         address card,
         address token,
