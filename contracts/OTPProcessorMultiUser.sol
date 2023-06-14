@@ -76,6 +76,33 @@ contract OTPProcessorMultiUser is Ownable {
         transferOwnership(_owner);
     }
 
+    /// @dev Sets the OTP Root and counter.
+    /// @param card Address of the card on which to set the otpRoot and counter.
+    /// @param otpRoot bytes16 OTP code to be set as the root.
+    /// @param otpRootCounter uint16 OTP Root Counter to be set as the root.
+    function setOTPRoot(
+        address card,
+        bytes16 otpRoot,
+        uint16 otpRootCounter
+    ) private {
+        cards[card].otpRoot = otpRoot;
+        cards[card].otpRootCounter = otpRootCounter;
+        emit SetOTPRoot(card, cards[card].otpRoot, cards[card].otpRootCounter);
+    }
+
+    /// @dev Sets the OPTRoot and Wallet for the calling account.
+    /// @param wallet Account to set as the wallet associated with the calling account.
+    /// @param _otpRoot OTPRoot to set for the calling account.
+    /// @param _otpRootCounter OTPRoot counter to set for the calling account.
+    function initCard(
+        address wallet,
+        bytes16 _otpRoot,
+        uint16 _otpRootCounter
+    ) external {
+        setWallet(wallet);
+        setOTPRoot(msg.sender, _otpRoot, _otpRootCounter);
+    }
+
     /// @dev Sync OTP between the card and the applet.
     /// @param _otpRoot bytes16 OTP code to be set as the root.
     /// @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
@@ -83,6 +110,42 @@ contract OTPProcessorMultiUser is Ownable {
     /// @notice Can only be called by card.
     function initOTP(bytes16 _otpRoot, uint16 _otpRootCounter) external {
         setOTPRoot(msg.sender, _otpRoot, _otpRootCounter);
+    }
+
+    /// @dev Sets the wallet that a card will spend from.
+    /// @param wallet The wallet a card will spend from.
+    function setWallet(address wallet) public {
+        cards[msg.sender].wallet = wallet;
+        emit SetWallet(msg.sender, cards[msg.sender].wallet);
+    }
+
+    //// @dev Sets the maximum amount of tokens which can be transferred via process() in a single call.
+    //// @param card Address of the card to set spending limit for.
+    //// @param token Address of the token to set a spending limit for.
+    //// @param spendLimit The maximum amount of tokens to be set.
+    function setSpendLimit(
+        address card,
+        address token,
+        uint256 spendLimit
+    ) external {
+        spendLimits[msg.sender][card][token] = spendLimit;
+        emit SetSpendLimit(msg.sender, card, token, spendLimit);
+    }
+
+    /// @dev Sets the address that can call process()
+    /// @param _processor Address _processor Address to set processor to.
+    /// @notice Can only be called by owner.
+    function setProcessor(address _processor) external onlyOwner {
+        processor = _processor;
+        emit SetProcessor(processor);
+    }
+
+    /// @dev Sets the address that should receive tokens when a transaction is processed.
+    /// @param _recipient Address _recipient Address to set recipient to.
+    /// @notice Can only be called by owner.
+    function setRecipient(address _recipient) external onlyOwner {
+        recipient = _recipient;
+        emit SetRecipient(recipient);
     }
 
     /// @dev Processes VISA payment
@@ -129,55 +192,5 @@ contract OTPProcessorMultiUser is Ownable {
         );
         if (!success) revert TransferFailed();
         emit PaymentProcessed(card, wallet, tokenAmount, otp, counter);
-    }
-
-    /// @dev Sets the OTP Root and counter.
-    /// @param card Address of the card on which to set the otpRoot and counter.
-    /// @param otpRoot bytes16 OTP code to be set as the root.
-    /// @param otpRootCounter uint16 OTP Root Counter to be set as the root.
-    function setOTPRoot(
-        address card,
-        bytes16 otpRoot,
-        uint16 otpRootCounter
-    ) private {
-        cards[card].otpRoot = otpRoot;
-        cards[card].otpRootCounter = otpRootCounter;
-        emit SetOTPRoot(card, cards[card].otpRoot, cards[card].otpRootCounter);
-    }
-
-    //// @dev Sets the maximum amount of tokens which can be transferred via process() in a single call.
-    //// @param card Address of the card to set spending limit for.
-    //// @param token Address of the token to set a spending limit for.
-    //// @param spendLimit The maximum amount of tokens to be set.
-    function setSpendLimit(
-        address card,
-        address token,
-        uint256 spendLimit
-    ) external {
-        spendLimits[msg.sender][card][token] = spendLimit;
-        emit SetSpendLimit(msg.sender, card, token, spendLimit);
-    }
-
-    /// @dev Sets the wallet that a card will spend from.
-    /// @param wallet The wallet a card will spend from.
-    function setWallet(address wallet) external {
-        cards[msg.sender].wallet = wallet;
-        emit SetWallet(msg.sender, cards[msg.sender].wallet);
-    }
-
-    /// @dev Sets the address that can call process()
-    /// @param _processor Address _processor Address to set processor to.
-    /// @notice Can only be called by owner.
-    function setProcessor(address _processor) external onlyOwner {
-        processor = _processor;
-        emit SetProcessor(processor);
-    }
-
-    /// @dev Sets the address that should receive tokens when a transaction is processed.
-    /// @param _recipient Address _recipient Address to set recipient to.
-    /// @notice Can only be called by owner.
-    function setRecipient(address _recipient) external onlyOwner {
-        recipient = _recipient;
-        emit SetRecipient(recipient);
     }
 }
