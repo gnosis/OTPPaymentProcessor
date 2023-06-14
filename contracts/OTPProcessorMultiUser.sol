@@ -1,6 +1,6 @@
 /// SPDX-License-Identifier: LGPL-3.0-only
 
-/// @title TangemPaymentProcessor -- A contract which allows a given payment processor to process user-authorized ERC20 token transfers.
+/// @title OTPPaymentProcessor -- A contract which allows a given payment processor to process user-authorized ERC20 token transfers.
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
