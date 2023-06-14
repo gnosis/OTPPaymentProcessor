@@ -26,6 +26,10 @@ const config: HardhatUserConfig = {
       url: "https://optimism.gnosischain.com" || "http://127.0.0.1:8545",
       accounts,
     },
+    scrolltest: {
+      url: `https://prealpha.scroll.io/l2`,
+      accounts,
+    },
   },
 };
 
