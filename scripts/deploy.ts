@@ -1,15 +1,15 @@
 import { task, types } from "hardhat/config";
 
 task("deploy-otp-payment-processor", "deploy otp payment processor contract")
-    .addParam("owner", "OTP Payment processor owner Multisig", undefined, types.string, true)
-    .addParam("processor", "Processor Hot Wallet that will be securely used from Payments Oracle", undefined, types.string, true)
-    .addParam("recipient", "FundsForwarder Multisig", undefined, types.string, true)
-    .addParam("gaslimit", "Threshold that should be used", 200000, types.int, true)
-    .addParam("gasprice", "Threshold that should be used", undefined, types.int, true)
+    .addParam("owner", "OTP Payment processor owner address", undefined, types.string, true)
+    .addParam("processor", "Processor that will trigger the contract", undefined, types.string, true)
+    .addParam("recipient", "Recipient that should receive funds from the OTP Payment processor", undefined, types.string, true)
+    .addParam("gaslimit", "Gas limit for the transaction", 200000, types.int, true)
+    .addParam("gasprice", "Gas price for the transaction", undefined, types.int, true)
     .setAction(async (taskArgs, hre) => {
 
       if (!taskArgs.owner) {
-        throw new Error('owner must be procided');
+        throw new Error('owner must be provided');
       }
 
       if (!taskArgs.processor) {
