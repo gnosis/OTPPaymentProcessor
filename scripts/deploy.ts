@@ -1,48 +1,50 @@
-import { ethers } from "hardhat";
+import { task, types } from "hardhat/config";
 
-async function main() {
-  // const owner = "0x53bcFaEd43441C7bB6149563eC11f756739C9f6A";
-  // const processor = "0xe4c4693526e4e3a26f36311d3f80a193b2bae906";
-  // const recipient = "0xaE56c5A8935210Acfc142832eCA3523b7d757b53";
-  // const token = "0x4346186e7461cB4DF06bCFCB4cD591423022e417";
+task("deploy-otp-payment-processor", "deploy otp payment processor contract")
+    .addParam("owner", "OTP Payment processor owner Multisig", undefined, types.string, true)
+    .addParam("processor", "Processor Hot Wallet that will be securely used from Payments Oracle", undefined, types.string, true)
+    .addParam("recipient", "FundsForwarder Multisig", undefined, types.string, true)
+    .addParam("gaslimit", "Threshold that should be used", 200000, types.int, true)
+    .addParam("gasprice", "Threshold that should be used", undefined, types.int, true)
+    .setAction(async (taskArgs, hre) => {
 
-  const owner = "0x53bcFaEd43441C7bB6149563eC11f756739C9f6A";
-  const processor = "0x53bcFaEd43441C7bB6149563eC11f756739C9f6A";
-  const recipient = "0x53bcFaEd43441C7bB6149563eC11f756739C9f6A";
-  const token = "0x80732890c93c6D9c6C23E06F888eD0CB88A06018";
+      if (!taskArgs.owner) {
+        throw new Error('owner must be procided');
+      }
 
-  const OTPProcessor = await ethers.getContractFactory("OTPProcessorMultiUser");
-  const otpProcessor = await OTPProcessor.deploy(
-    owner,
-    processor,
-    recipient,
-    token
-  );
+      if (!taskArgs.processor) {
+        throw new Error('processor must be provided');
+      }
 
-  await otpProcessor.deployed();
-  const [signer] = await ethers.getSigners();
-  console.log(
-    "account:",
-    signer.address,
-    "\n-----------------",
-    "\nOTPProcessorMultiUser:",
-    otpProcessor.address,
-    "\n-----------------",
-    "\nowner:",
-    await otpProcessor.owner(),
-    "\nprocessor:",
-    await otpProcessor.processor(),
-    "\nrecipient:",
-    await otpProcessor.recipient(),
-    "\ntoken:",
-    await otpProcessor.token(),
-    "\n-----------------"
-  );
-}
+      if (!taskArgs.recipient) {
+        throw new Error('recipient must be provided');
+      }
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+      const OTPProcessor = await hre.ethers.getContractFactory("OTPProcessorMultiUser");
+      const otpProcessor = await OTPProcessor.deploy(
+        taskArgs.owner,
+        taskArgs.processor,
+        taskArgs.recipient,
+      );
+
+      await otpProcessor.deployed();
+      const [signer] = await hre.ethers.getSigners();
+      console.log(
+        "account:",
+        signer.address,
+        "\n-----------------",
+        "\nOTPProcessorMultiUser:",
+        otpProcessor.address,
+        "\n-----------------",
+        "\nowner:",
+        await otpProcessor.owner(),
+        "\nprocessor:",
+        await otpProcessor.processor(),
+        "\nrecipient:",
+        await otpProcessor.recipient(),
+        "\n-----------------"
+      );
+        
+    });
+
+export { }

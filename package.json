@@ -3,7 +3,7 @@
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
-    "deploy": "hardhat run scripts/deploy.ts",
+    "deploy": "hardhat deploy-otp-payment-processor",
     "coverage": "hardhat coverage",
     "hardhat": "hardhat"
   },
