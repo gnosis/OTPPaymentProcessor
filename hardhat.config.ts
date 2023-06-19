@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import "./scripts/tasks"
 
 dotenv.config();
 
@@ -15,9 +16,13 @@ if (WALLET_PRIVATE_KEY) {
   accounts = [WALLET_PRIVATE_KEY];
 }
 
+
 const config: HardhatUserConfig = {
   solidity: "0.8.9",
   networks: {
+    ledger: {
+      url: "http://127.0.0.1:1248"
+    },
     goerli: {
       url: process.env.JSONRPC_HTTP_URL || "http://127.0.0.1:8545",
       accounts,
