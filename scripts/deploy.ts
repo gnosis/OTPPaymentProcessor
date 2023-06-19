@@ -12,12 +12,7 @@ async function main() {
   const token = "0x80732890c93c6D9c6C23E06F888eD0CB88A06018";
 
   const OTPProcessor = await ethers.getContractFactory("OTPProcessorMultiUser");
-  const otpProcessor = await OTPProcessor.deploy(
-    owner,
-    processor,
-    recipient,
-    token
-  );
+  const otpProcessor = await OTPProcessor.deploy(owner, processor, recipient);
 
   await otpProcessor.deployed();
   const [signer] = await ethers.getSigners();
@@ -33,10 +28,7 @@ async function main() {
     "\nprocessor:",
     await otpProcessor.processor(),
     "\nrecipient:",
-    await otpProcessor.recipient(),
-    "\ntoken:",
-    await otpProcessor.token(),
-    "\n-----------------"
+    await otpProcessor.recipient()
   );
 }
 
