@@ -5,6 +5,11 @@
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
+import {
+   ERC2771Context
+} from "@gelatonetwork/relay-context/contracts/vendor/ERC2771Context.sol";
+
+
 pragma solidity >=0.7.0 <0.9.0;
 
 struct Card {
@@ -16,7 +21,7 @@ struct Card {
     address wallet;
 }
 
-contract OTPProcessorMultiUser is Ownable {
+contract OTPProcessorMultiUser is ERC2771Context, Ownable {
     /// @dev Mapping of card addresses to card variables.
     mapping(address => Card) public cards;
 
@@ -109,13 +114,12 @@ contract OTPProcessorMultiUser is Ownable {
     /// @param _otpRoot OTPRoot to set for the calling account.
     /// @param _otpRootCounter OTPRoot counter to set for the calling account.
     function initCard(
-        address card,
         address wallet,
         bytes16 _otpRoot,
         uint16 _otpRootCounter
     ) external onlyRelayer {
         setWallet(wallet);
-        setOTPRoot(card, _otpRoot, _otpRootCounter);
+        setOTPRoot(_msgSender(), _otpRoot, _otpRootCounter);
     }
 
     /// @dev Sync OTP between the card and the applet.
@@ -123,8 +127,8 @@ contract OTPProcessorMultiUser is Ownable {
     /// @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
     /// @notice Must be called at least once to initialize the contract.
     /// @notice Can only be called by card.
-    function initOTP(address card, bytes16 _otpRoot, uint16 _otpRootCounter) external onlyRelayer {
-        setOTPRoot(card, _otpRoot, _otpRootCounter);
+    function initOTP(bytes16 _otpRoot, uint16 _otpRootCounter) external onlyRelayer {
+        setOTPRoot(_msgSender(), _otpRoot, _otpRootCounter);
     }
 
     /// @dev Sets the wallet that a card will spend from.
