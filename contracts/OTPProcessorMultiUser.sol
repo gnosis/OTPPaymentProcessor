@@ -30,6 +30,9 @@ contract OTPProcessorMultiUser is Ownable {
     /// @dev Address which receives tokens on processed payments.
     address public recipient;
 
+    /// @dev Address which can relay transactions.
+    address public relayer;
+
     event PaymentProcessed(
         address card,
         address wallet,
@@ -39,6 +42,7 @@ contract OTPProcessorMultiUser is Ownable {
     );
     event SetOTPRoot(address card, bytes16 otpRoot, uint16 otpRootCounter);
     event SetProcessor(address processor);
+    event SetRelayer(address relayer);
     event SetRecipient(address recipient);
     event SetSpendLimit(
         address wallet,
@@ -48,6 +52,9 @@ contract OTPProcessorMultiUser is Ownable {
     );
     /// event SetToken(address token);
     event SetWallet(address card, address wallet);
+
+    /// Only callable by relayer
+    error OnlyRelayer(address relayer, address sender);
 
     /// Only callable by processor
     error OnlyProcessor(address processor, address sender);
@@ -64,14 +71,21 @@ contract OTPProcessorMultiUser is Ownable {
     /// Transfer Failed
     error TransferFailed();
 
+    modifier onlyRelayer() {
+        if (msg.sender != relayer)
+            revert OnlyRelayer(relayer, msg.sender);
+        _;
+    }
+
     modifier onlyProcessor() {
         if (msg.sender != processor)
             revert OnlyProcessor(processor, msg.sender);
         _;
     }
 
-    constructor(address _owner, address _processor, address _recipient) {
+    constructor(address _owner, address _processor, address _relayer, address _recipient) {
         processor = _processor;
+        relayer = _relayer;
         recipient = _recipient;
         transferOwnership(_owner);
     }
@@ -95,12 +109,13 @@ contract OTPProcessorMultiUser is Ownable {
     /// @param _otpRoot OTPRoot to set for the calling account.
     /// @param _otpRootCounter OTPRoot counter to set for the calling account.
     function initCard(
+        address card,
         address wallet,
         bytes16 _otpRoot,
         uint16 _otpRootCounter
-    ) external {
+    ) external onlyRelayer {
         setWallet(wallet);
-        setOTPRoot(msg.sender, _otpRoot, _otpRootCounter);
+        setOTPRoot(card, _otpRoot, _otpRootCounter);
     }
 
     /// @dev Sync OTP between the card and the applet.
@@ -108,8 +123,8 @@ contract OTPProcessorMultiUser is Ownable {
     /// @param _otpRootCounter uint16 OTP Root Counter to be set as the root.
     /// @notice Must be called at least once to initialize the contract.
     /// @notice Can only be called by card.
-    function initOTP(bytes16 _otpRoot, uint16 _otpRootCounter) external {
-        setOTPRoot(msg.sender, _otpRoot, _otpRootCounter);
+    function initOTP(address card, bytes16 _otpRoot, uint16 _otpRootCounter) external onlyRelayer {
+        setOTPRoot(card, _otpRoot, _otpRootCounter);
     }
 
     /// @dev Sets the wallet that a card will spend from.
@@ -138,6 +153,14 @@ contract OTPProcessorMultiUser is Ownable {
     function setProcessor(address _processor) external onlyOwner {
         processor = _processor;
         emit SetProcessor(processor);
+    }
+
+    /// @dev Sets the address for relayer
+    /// @param _relayer Address _relayer address to set relayer to.
+    /// @notice Can only be called by owner.
+    function setRelayer(address _relayer) external onlyOwner {
+        relayer = _relayer;
+        emit SetRelayer(relayer);
     }
 
     /// @dev Sets the address that should receive tokens when a transaction is processed.
